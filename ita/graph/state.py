@@ -1,13 +1,16 @@
 from typing import TypedDict, Dict, Any, List, Optional
 
-
 class Classification(TypedDict):
-    category:str
-    confidence_value:float
+    category: str
 
-class Duplicate(TypedDict):
+class IdeaAssessment(TypedDict):
+    idea_score: float
+    scores: Dict[str, float]
+    reason: str
+
+class DuplicateMatch(TypedDict):
     idea_id:str
-    text:str
+    submission:str
     similarity:float
 
 class Decision(TypedDict):
@@ -15,58 +18,58 @@ class Decision(TypedDict):
     action:str
     comment:str
     timestamp:str
-    duration:str
+    duration_ms:str
 
 class DraftVersion(TypedDict):
     version:int
     content:str
     created_at:str
 
-class NodeHistory(TypedDict):
-    Node:str
-    start:str
-    finish:str
-    duration:str
-    input:Dict[str,Any]
-    output:Dict[str,Any]
+class NodeHistoryEntry(TypedDict):
+    node: str
+    run_id: str
+    correlation_id: str
 
-class AgentGraph(TypedDict):
-    # Basic workflow information
+    input: Dict[str, Any]
+    output: Dict[str, Any]
+
+    started_at: str
+    finished_at: str
+    duration_ms: float
+
+    success: bool
+    error_type: Optional[str]
+    error_message: Optional[str]
+
+    previous_node: Optional[str]
+    next_node: Optional[str]
+
+class AgentGraph(TypedDict, total=False):
     run_id: str
     thread_id: str
     correlation_id: str
+
     current_node: str
     status: str
 
-    # User submission
     submission: str
 
-    # Classification
-
     classification: Classification
+    idea_assessment: IdeaAssessment
 
-    # Duplicate detection
-
-    duplicate_matches: List[Duplicate]
+    duplicate_matches: List[DuplicateMatch]
     duplicate_found: bool
 
-    # Enrichment
     enrichment: Dict[str, Any]
 
-    # Draft
     draft_summary: str
     draft_versions: List[DraftVersion]
-
-    # HITL
 
     current_decision: Optional[Decision]
     decision_history: List[Decision]
 
-    # Feedback from reviewer
     reviewer_feedback: str
 
-    # Iteration
     revision_count: int
 
-    # Node execution tracking
-    node_history: List[Dict[str, Any]]
+    node_history: List[NodeHistoryEntry]
