@@ -1,4 +1,8 @@
-Include
-Lib
+Lib/
+Scripts/
+Include/
 pyvenv.cfg
-Lib
+
+__pycache__/
+*.pyc
+.env
