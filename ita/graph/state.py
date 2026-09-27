@@ -14,11 +14,10 @@ class DuplicateMatch(TypedDict):
     similarity:float
 
 class Decision(TypedDict):
-    reviewer_id:str
     action:str
     comment:str
     timestamp:str
-    duration_ms:str
+    duration_ms:float
 
 class DraftVersion(TypedDict):
     version:int

@@ -1,13 +1,42 @@
-from graph.nodes.duplicate_check import duplicate_check_node
+from graph.workflow import graph
 
 
-state = {
-    "submission": "Create an AI chatbot to answer employee HR questions."
+initial_state = {
+    "submission": (
+        "Develop an AI system that predicts "
+        "customer demand and recommends optimal "
+        "inventory levels for each product."
+    )
 }
 
 
-result = duplicate_check_node(state)
+print("\nStarting Idea Triage workflow...\n")
 
-print("\n========== RESULT ==========")
-print(result)
-print("============================")
+result = graph.invoke(initial_state)
+
+
+print("\n========== WORKFLOW RESULT ==========")
+
+print("\nSubmission:")
+print(result.get("submission"))
+
+print("\nClassification:")
+print(result.get("classification"))
+
+print("\nIdea Assessment:")
+print(result.get("idea_assessment"))
+
+print("\nDuplicate:")
+print(result.get("is_duplicate"))
+
+print("\nTop Duplicate Matches:")
+for match in result.get("duplicate_matches", []):
+    print(match)
+
+print("\nDraft Summary:")
+print(result.get("draft"))
+
+print("\nFinal Status:")
+print(result.get("status"))
+
+print("\n=====================================")

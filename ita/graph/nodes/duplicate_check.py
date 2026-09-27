@@ -10,10 +10,6 @@ TOP_K = 3
 
 
 def normalize_text(text: str) -> str:
-    """
-    Normalize text before comparing ideas.
-    """
-
     return " ".join(
         text.lower().split()
     )
@@ -23,15 +19,6 @@ def calculate_similarity(
     new_idea: str,
     existing_idea: str,
 ) -> float:
-    """
-    Calculate text similarity between
-    two ideas.
-
-    Temporary implementation.
-
-    Later this will be replaced by
-    embedding/vector-store similarity.
-    """
 
     return round(
         SequenceMatcher(
@@ -44,9 +31,6 @@ def calculate_similarity(
 
 
 def load_existing_ideas() -> list[str]:
-    """
-    Load past ideas from the text file.
-    """
 
     try:
 
@@ -86,10 +70,6 @@ def duplicate_check_node(
             "Submission is required for duplicate check"
         )
 
-    # --------------------------------
-    # Load previous ideas
-    # --------------------------------
-
     existing_ideas = load_existing_ideas()
 
     if not existing_ideas:
@@ -99,15 +79,11 @@ def duplicate_check_node(
         )
 
         return {
-            "is_duplicate": False,
+            "duplicate_found": False,
             "duplicate_matches": [],
             "current_node": node_name,
             "status": "DUPLICATE_CHECKED",
         }
-
-    # --------------------------------
-    # Compare against every old idea
-    # --------------------------------
 
     matches = []
 
@@ -120,90 +96,43 @@ def duplicate_check_node(
 
         matches.append(
             {
-                "idea": idea,
+                "submission": idea,
                 "similarity": similarity,
             }
         )
-
-    # --------------------------------
-    # Sort by highest similarity
-    # --------------------------------
 
     matches.sort(
         key=lambda match: match["similarity"],
         reverse=True,
     )
 
-    # --------------------------------
-    # Keep only top 3
-    # --------------------------------
-
     top_matches = matches[:TOP_K]
 
-    # --------------------------------
-    # Duplicate decision
-    # --------------------------------
-
-    is_duplicate = (
+    duplicate_found = (
         top_matches[0]["similarity"]
         >= SIMILARITY_THRESHOLD
     )
-
-    # --------------------------------
-    # Testing output
-    # --------------------------------
 
     print(
         "\n========== DUPLICATE CHECK =========="
     )
 
-    print("\nNew Idea:")
-    print(submission)
-
-    print("\nTop Matches:")
-
-    for index, match in enumerate(
-        top_matches,
-        start=1,
-    ):
-
-        print(
-            f"\nMatch {index}"
-        )
-
-        print(
-            f"Idea       : {match['idea']}"
-        )
-
-        print(
-            f"Similarity : {match['similarity']}"
-        )
-
     print(
-        f"\nThreshold  : "
-        f"{SIMILARITY_THRESHOLD}"
-    )
-
-    print(
-        f"Duplicate  : "
-        f"{'YES' if is_duplicate else 'NO'}"
+        f"Duplicate: "
+        f"{'YES' if duplicate_found else 'NO'}"
     )
 
     print(
         "=====================================\n"
     )
 
-    # --------------------------------
-    # Return state
-    # --------------------------------
-
     return {
-        "is_duplicate": is_duplicate,
+        "duplicate_found": duplicate_found,
         "duplicate_matches": top_matches,
         "current_node": node_name,
         "status": (
             "DUPLICATE_FOUND"
-            if is_duplicate
+            if duplicate_found
             else "DUPLICATE_CHECKED"
         ),
     }

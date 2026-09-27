@@ -1,16 +1,15 @@
 from graph.state import AgentGraph
 
 
-def draft_summary_node(state: AgentGraph) -> dict:
+def draft_summary_node(
+    state: AgentGraph,
+) -> dict:
+
+    node_name = "Draft Summary"
 
     print("\n========== DRAFT SUMMARY ==========")
 
-    submission = state.get("submission")
-
-    print("\nOriginal Idea:")
-    print(submission)
-
-    print("\nEnter the draft summary for this idea:")
+    print("\nEnter the summary of the idea:")
 
     draft = input("> ").strip()
 
@@ -24,7 +23,7 @@ def draft_summary_node(state: AgentGraph) -> dict:
     print("===================================\n")
 
     return {
-        "draft": draft,
-        "current_node": "Draft Summary",
+        "draft_summary": draft,
+        "current_node": node_name,
         "status": "DRAFT_CREATED",
     }

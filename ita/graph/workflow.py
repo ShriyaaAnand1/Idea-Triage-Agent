@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
 
 from graph.state import AgentGraph
 
@@ -72,7 +73,7 @@ builder.add_conditional_edges(
     route_after_approval,
     {
         "reject": END,
-        "feedback": "Enrich",
+        "improve": "Enrich",
         "approve": "Finalize",
     }
 )
@@ -82,4 +83,9 @@ builder.add_edge( "Enrich","Draft Summary")
 
 builder.add_edge( "Finalize", END)
 
-graph = builder.compile()
+checkpointer = InMemorySaver()
+
+
+graph = builder.compile(
+    checkpointer=checkpointer
+)

@@ -112,9 +112,6 @@ def classify_node(state: AgentGraph) -> dict:
     started_at = utc_now()
     timer = start_timer()
 
-    run_id = state["run_id"]
-    correlation_id = state["correlation_id"]
-
     previous_node = state.get("current_node")
 
     node_input = {
@@ -126,8 +123,6 @@ def classify_node(state: AgentGraph) -> dict:
         extra={
             "extra_fields": {
                 "event": "node_start",
-                "run_id": run_id,
-                "correlation_id": correlation_id,
                 "node": NODE_NAME,
             }
         }
@@ -142,20 +137,23 @@ def classify_node(state: AgentGraph) -> dict:
                 "Submission is required for classification"
             )
 
-        # LLM classification + evaluation
+         # 1. LLM classification + quality assessment
+
         llm_result = classify_model(submission)
 
         category = llm_result["category"]
         scores = llm_result["scores"]
         reason = llm_result.get("reason", "")
 
-        # Validate category
+         # 2. Validate category
+ 
         if category not in CATEGORIES:
             raise ValueError(
                 f"Invalid category returned by LLM: {category}"
             )
 
-        # Validate scores
+         # 3. Validate scores
+ 
         required_scores = [
             "clarity",
             "impact",
@@ -172,13 +170,18 @@ def classify_node(state: AgentGraph) -> dict:
 
             score = scores[score_name]
 
+            if not isinstance(score, (int, float)):
+                raise ValueError(
+                    f"{score_name} must be a number"
+                )
+
             if not 0.0 <= score <= 1.0:
                 raise ValueError(
                     f"{score_name} must be between 0 and 1"
                 )
-            
-        # Calculate overall idea score
 
+         # 4. Calculate overall idea score
+ 
         idea_score = calculate_idea_score(scores)
 
         idea_assessment = {
@@ -191,6 +194,13 @@ def classify_node(state: AgentGraph) -> dict:
             "category": category,
         }
 
+         # 5. Decide the next node
+ 
+        if idea_score < QUALITY_THRESHOLD:
+            next_node = "Human Review"
+        else:
+            next_node = "Duplicate Check"
+
         node_output = {
             "classification": classification,
             "idea_assessment": idea_assessment,
@@ -198,14 +208,14 @@ def classify_node(state: AgentGraph) -> dict:
             "status": "CLASSIFIED",
         }
 
+         # 6. Node history
+ 
         finished_at = utc_now()
         elapsed = duration_ms(timer)
 
         history = add_node_history(
             state=state,
             node_name=NODE_NAME,
-            run_id=run_id,
-            correlation_id=correlation_id,
             node_input=node_input,
             node_output=node_output,
             started_at=started_at,
@@ -213,14 +223,18 @@ def classify_node(state: AgentGraph) -> dict:
             duration=elapsed,
             success=True,
             previous_node=previous_node,
-            next_node=None,
+            next_node=next_node,
         )
 
+         # 7. Final result
+ 
         result = {
             **node_output,
             "node_history": history,
         }
 
+         # 8. Console output
+ 
         print("\n========== CLASSIFICATION ==========")
         print(f"Category       : {category}")
         print(f"Clarity        : {scores['clarity']}")
@@ -229,23 +243,18 @@ def classify_node(state: AgentGraph) -> dict:
         print(f"Specificity    : {scores['specificity']}")
         print(f"Idea Score     : {idea_score}")
         print(f"Threshold      : {QUALITY_THRESHOLD}")
-
-        # Temporary routing
-        if idea_score < QUALITY_THRESHOLD:
-            next_node = "Human Review"
-        else:
-            next_node = "Duplicate Check"
         print(f"Next Node      : {next_node}")
         print("====================================\n")
+
+         # 9. Logging
+ 
         logger.info(
             "Node completed",
             extra={
                 "extra_fields": {
                     "event": "node_end",
-                    "run_id": run_id,
-                    "correlation_id": correlation_id,
                     "node": NODE_NAME,
-                    "duration_ms": round(elapsed, 2),
+                    "duration": round(elapsed, 2),
                     "success": True,
                     "idea_score": idea_score,
                     "next_node": next_node,
@@ -264,10 +273,8 @@ def classify_node(state: AgentGraph) -> dict:
             extra={
                 "extra_fields": {
                     "event": "node_error",
-                    "run_id": run_id,
-                    "correlation_id": correlation_id,
                     "node": NODE_NAME,
-                    "duration_ms": round(elapsed, 2),
+                    "duration": round(elapsed, 2),
                     "success": False,
                     "error_type": type(exc).__name__,
                     "error_message": str(exc),

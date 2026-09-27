@@ -1,55 +1,54 @@
+from langgraph.types import interrupt
+
 from graph.state import AgentGraph
 
 
-def human_approval_node(state: AgentGraph) -> dict:
+def human_approval_node(
+    state: AgentGraph,
+) -> dict:
 
-    print("\n========== HUMAN APPROVAL ==========")
+    node_name = "Human Approval"
 
-    draft = state.get("draft")
+    decision = interrupt(
+        {
+            "message": (
+                "Do you want to approve the idea, "
+                "reject the idea, or request improvements?"
+            ),
+            "options": [
+                "approve",
+                "reject",
+                "improve",
+            ],
+        }
+    )
 
-    print("\nDraft Summary:")
-    print(draft)
+    action = decision.get("action")
 
-    print("\nChoose a decision:")
-    print("1. approve")
-    print("2. reject")
-    print("3. feedback")
+    comment = decision.get(
+        "comment",
+        "",
+    )
 
-    decision = input("\nDecision: ").strip().lower()
-
-    if decision not in {
+    if action not in {
         "approve",
         "reject",
-        "feedback",
+        "improve",
     }:
 
         raise ValueError(
-            "Decision must be approve, reject, or feedback"
+            f"Invalid human decision: {action}"
         )
 
-    feedback = None
-
-    if decision == "feedback":
-
-        feedback = input(
-            "\nEnter reviewer feedback: "
-        ).strip()
-
-        if not feedback:
-            raise ValueError(
-                "Feedback cannot be empty"
-            )
-
-    print("\nDecision:", decision)
-
-    if feedback:
-        print("Feedback:", feedback)
-
-    print("====================================\n")
-
     return {
-        "approval_decision": decision,
-        "approval_feedback": feedback,
-        "current_node": "Human Approval",
+        "current_decision": {
+            "action": action,
+            "comment": comment,
+        },
+
+        "reviewer_feedback": comment,
+
+        "current_node": node_name,
+
         "status": "HUMAN_DECISION",
     }

@@ -1,6 +1,7 @@
 import time
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
+from copy import deepcopy
 
 
 def utc_now() -> str:
@@ -18,8 +19,6 @@ def duration_ms(start_time: float) -> float:
 def add_node_history(
     state,
     node_name: str,
-    run_id: str,
-    correlation_id: str,
     node_input: Dict[str, Any],
     node_output: Dict[str, Any],
     started_at: str,
@@ -33,16 +32,19 @@ def add_node_history(
 ):
     entry = {
         "node": node_name,
-        "run_id": run_id,
-        "correlation_id": correlation_id,
-        "input": node_input,
-        "output": node_output,
+
+        "input": deepcopy(node_input),
+        "output": deepcopy(node_output),
+
         "started_at": started_at,
         "finished_at": finished_at,
         "duration_ms": round(duration, 2),
+
         "success": success,
+
         "error_type": error_type,
         "error_message": error_message,
+
         "previous_node": previous_node,
         "next_node": next_node,
     }
