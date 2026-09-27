@@ -257,6 +257,7 @@ def classify_node(state: AgentGraph) -> dict:
                     "duration": round(elapsed, 2),
                     "success": True,
                     "idea_score": idea_score,
+                    "previous_node": previous_node,
                     "next_node": next_node,
                 }
             }

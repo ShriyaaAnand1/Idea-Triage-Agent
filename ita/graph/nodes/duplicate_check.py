@@ -2,6 +2,15 @@ from difflib import SequenceMatcher
 
 from graph.state import AgentGraph
 
+from utils.node_utils import (
+    utc_now,
+    start_timer,
+    duration_ms,
+    add_node_history,
+)
+
+from logger.logging import logger
+
 
 IDEAS_FILE = "data/ideas.txt"
 
@@ -63,76 +72,167 @@ def duplicate_check_node(
 
     node_name = "Duplicate Check"
 
-    submission = state.get("submission")
+    started_at = utc_now()
+    timer = start_timer()
 
-    if not submission:
-        raise ValueError(
-            "Submission is required for duplicate check"
+    previous_node = state.get("current_node")
+
+    node_input = {
+        "submission_received": bool(
+            state.get("submission")
         )
+    }
 
-    existing_ideas = load_existing_ideas()
-
-    if not existing_ideas:
-
-        print(
-            "\nNo existing ideas found."
-        )
-
-        return {
-            "duplicate_found": False,
-            "duplicate_matches": [],
-            "current_node": node_name,
-            "status": "DUPLICATE_CHECKED",
+    logger.info(
+        "Node started",
+        extra={
+            "extra_fields": {
+                "event": "node_start",
+                "node": node_name,
+            }
         }
+    )
 
-    matches = []
+    try:
 
-    for idea in existing_ideas:
+        submission = state.get("submission")
 
-        similarity = calculate_similarity(
-            submission,
-            idea,
+        if not submission:
+            raise ValueError(
+                "Submission is required for duplicate check"
+            )
+
+        existing_ideas = load_existing_ideas()
+
+        if not existing_ideas:
+
+            print(
+                "\nNo existing ideas found."
+            )
+
+            next_node = "Draft Summary"
+
+            node_output = {
+                "duplicate_found": False,
+                "duplicate_matches": [],
+                "current_node": node_name,
+                "status": "DUPLICATE_CHECKED",
+            }
+
+        else:
+
+            matches = []
+
+            for idea in existing_ideas:
+
+                similarity = calculate_similarity(
+                    submission,
+                    idea,
+                )
+
+                matches.append(
+                    {
+                        "submission": idea,
+                        "similarity": similarity,
+                    }
+                )
+
+            matches.sort(
+                key=lambda match: match["similarity"],
+                reverse=True,
+            )
+
+            top_matches = matches[:TOP_K]
+
+            duplicate_found = (
+                top_matches[0]["similarity"]
+                >= SIMILARITY_THRESHOLD
+            )
+
+            print(
+                "\n========== DUPLICATE CHECK =========="
+            )
+
+            print(
+                f"Duplicate: "
+                f"{'YES' if duplicate_found else 'NO'}"
+            )
+
+            print(
+                "=====================================\n"
+            )
+
+            next_node = (
+                "END"
+                if duplicate_found
+                else "Draft Summary"
+            )
+
+            node_output = {
+                "duplicate_found": duplicate_found,
+                "duplicate_matches": top_matches,
+                "current_node": node_name,
+                "status": (
+                    "DUPLICATE_FOUND"
+                    if duplicate_found
+                    else "DUPLICATE_CHECKED"
+                ),
+            }
+
+        finished_at = utc_now()
+        elapsed = duration_ms(timer)
+
+        history = add_node_history(
+            state=state,
+            node_name=node_name,
+            node_input=node_input,
+            node_output=node_output,
+            started_at=started_at,
+            finished_at=finished_at,
+            duration=elapsed,
+            success=True,
+            previous_node=previous_node,
+            next_node=next_node,
         )
 
-        matches.append(
-            {
-                "submission": idea,
-                "similarity": similarity,
+        logger.info(
+            "Node completed",
+            extra={
+                "extra_fields": {
+                    "event": "node_end",
+                    "node": node_name,
+                    "duration_ms": round(elapsed, 2),
+                    "success": True,
+                    "previous_node": previous_node,
+                    "next_node": next_node,
+                    "duplicate_found": node_output[
+                        "duplicate_found"
+                    ],
+                }
             }
         )
 
-    matches.sort(
-        key=lambda match: match["similarity"],
-        reverse=True,
-    )
+        return {
+            **node_output,
+            "node_history": history,
+        }
 
-    top_matches = matches[:TOP_K]
+    except Exception as exc:
 
-    duplicate_found = (
-        top_matches[0]["similarity"]
-        >= SIMILARITY_THRESHOLD
-    )
+        elapsed = duration_ms(timer)
 
-    print(
-        "\n========== DUPLICATE CHECK =========="
-    )
+        logger.error(
+            "Node failed",
+            extra={
+                "extra_fields": {
+                    "event": "node_error",
+                    "node": node_name,
+                    "duration_ms": round(elapsed, 2),
+                    "success": False,
+                    "error_type": type(exc).__name__,
+                    "error_message": str(exc),
+                }
+            }
+        )
 
-    print(
-        f"Duplicate: "
-        f"{'YES' if duplicate_found else 'NO'}"
-    )
-
-    print(
-        "=====================================\n"
-    )
-
-    return {
-        "duplicate_found": duplicate_found,
-        "duplicate_matches": top_matches,
-        "current_node": node_name,
-        "status": (
-            "DUPLICATE_FOUND"
-            if duplicate_found
-            else "DUPLICATE_CHECKED"
-        ),
-    }
+        raise
