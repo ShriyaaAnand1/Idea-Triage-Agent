@@ -2,6 +2,7 @@ Lib/
 Scripts/
 Include/
 pyvenv.cfg
+share/
 
 __pycache__/
 *.pyc

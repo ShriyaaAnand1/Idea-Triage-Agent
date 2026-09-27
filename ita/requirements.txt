@@ -2,3 +2,5 @@ python-dotenv
 openai
 langgraph
 langchain-core
+chromadb
+langchain_openai

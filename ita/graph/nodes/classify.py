@@ -232,7 +232,7 @@ def classify_node(state: AgentGraph) -> dict:
 
         # Temporary routing
         if idea_score < QUALITY_THRESHOLD:
-            next_node = "Manual Review"
+            next_node = "Human Review"
         else:
             next_node = "Duplicate Check"
         print(f"Next Node      : {next_node}")

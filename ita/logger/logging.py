@@ -5,24 +5,25 @@ import sys
 
 from logging.handlers import TimedRotatingFileHandler
 
-LOG_DIR = "logs"
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+
+LOG_DIR = os.path.join(BASE_DIR, "logs")
 LOG_FILE = os.path.join(LOG_DIR, "application.json.log")
 
 os.makedirs(LOG_DIR, exist_ok=True)
 
 class JsonFormatter(logging.Formatter):
-
     def format(self, record):
-
         log_entry = {
             "timestamp": self.formatTime(
                 record,
-                datefmt="%Y-%m-%dT%H:%M:%S"
+                datefmt="%Y-%m-%d %H:%M:%S"
             ),
             "level": record.levelname.lower(),
             "message": record.getMessage(),
         }
-
         extra_fields = getattr(
             record,
             "extra_fields",
@@ -30,33 +31,17 @@ class JsonFormatter(logging.Formatter):
         )
 
         log_entry.update(extra_fields)
-
         return json.dumps(log_entry)
 
-
 logger = logging.getLogger("idea_review")
-
 logger.setLevel(logging.DEBUG)
 
-
 if not logger.handlers:
-
     formatter = JsonFormatter()
-
-    # -------------------------
-    # Standard output
-    # -------------------------
-
-    stdout_handler = logging.StreamHandler(
-        sys.stdout
-    )
-
+    stdout_handler = logging.StreamHandler( sys.stdout)
     stdout_handler.setFormatter(formatter)
 
-    # -------------------------
     # Rolling file
-    # -------------------------
-
     file_handler = TimedRotatingFileHandler(
         LOG_FILE,
         when="midnight",
