@@ -9,7 +9,6 @@ class IdeaAssessment(TypedDict):
     reason: str
 
 class DuplicateMatch(TypedDict):
-    idea_id:str
     submission:str
     similarity:float
 

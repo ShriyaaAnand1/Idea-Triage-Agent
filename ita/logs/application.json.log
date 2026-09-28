@@ -20,3 +20,35 @@
 {"timestamp": "2026-09-28 00:26:20", "level": "info", "message": "Node started", "event": "node_start", "node": "Human Approval"}
 {"timestamp": "2026-09-28 00:26:20", "level": "info", "message": "Human decision recorded", "event": "human_decision", "node": "Human Approval", "decision": "reject", "decision_time_ms": 0.05, "next_node": "END"}
 {"timestamp": "2026-09-28 00:26:20", "level": "info", "message": "Node completed", "event": "node_end", "node": "Human Approval", "duration_ms": 0.51, "success": true, "previous_node": "Draft Summary", "next_node": "END"}
+{"timestamp": "2026-09-28 14:30:46", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
+{"timestamp": "2026-09-28 14:30:46", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.81, "success": true, "previous_node": null, "next_node": "Classify"}
+{"timestamp": "2026-09-28 14:30:46", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
+{"timestamp": "2026-09-28 14:30:53", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 7583.37, "success": true, "idea_score": 0.87, "previous_node": "Submission", "next_node": "Duplicate Check"}
+{"timestamp": "2026-09-28 14:38:10", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
+{"timestamp": "2026-09-28 14:38:10", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.51, "success": true, "previous_node": null, "next_node": "Classify"}
+{"timestamp": "2026-09-28 14:38:10", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
+{"timestamp": "2026-09-28 14:38:15", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 4793.18, "success": true, "idea_score": 0.86, "previous_node": "Submission", "next_node": "Duplicate Check"}
+{"timestamp": "2026-09-28 14:38:15", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
+{"timestamp": "2026-09-28 14:38:17", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 1518.14, "success": true, "previous_node": "Classify", "next_node": "END", "duplicate_found": true}
+{"timestamp": "2026-09-28 14:40:20", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
+{"timestamp": "2026-09-28 14:40:20", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.13, "success": true, "previous_node": null, "next_node": "Classify"}
+{"timestamp": "2026-09-28 14:40:20", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
+{"timestamp": "2026-09-28 14:40:25", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 5025.93, "success": true, "idea_score": 0.88, "previous_node": "Submission", "next_node": "Duplicate Check"}
+{"timestamp": "2026-09-28 14:40:25", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
+{"timestamp": "2026-09-28 14:40:27", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 2257.21, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
+{"timestamp": "2026-09-28 14:40:27", "level": "info", "message": "Node started", "event": "node_start", "node": "Draft Summary"}
+{"timestamp": "2026-09-28 14:40:41", "level": "info", "message": "Node completed", "event": "node_end", "node": "Draft Summary", "duration_ms": 14123.42, "success": true, "previous_node": "Duplicate Check", "next_node": "Human Approval"}
+{"timestamp": "2026-09-28 14:40:41", "level": "info", "message": "Node started", "event": "node_start", "node": "Human Approval"}
+{"timestamp": "2026-09-28 14:40:41", "level": "error", "message": "Node failed", "event": "node_error", "node": "Human Approval", "duration_ms": 0.57, "success": false, "error_type": "GraphInterrupt", "error_message": "(Interrupt(value={'message': 'Do you want to approve the idea, reject the idea, or request improvements?', 'options': ['approve', 'reject', 'improve']}, id='a33fdb7a4eb14f4384a9febe4c4c982e', response_schema=None),)"}
+{"timestamp": "2026-09-28 14:41:09", "level": "info", "message": "Node started", "event": "node_start", "node": "Human Approval"}
+{"timestamp": "2026-09-28 14:41:09", "level": "info", "message": "Human decision recorded", "event": "human_decision", "node": "Human Approval", "decision": "improve", "decision_time_ms": 0.06, "next_node": "Enrich"}
+{"timestamp": "2026-09-28 14:41:09", "level": "info", "message": "Node completed", "event": "node_end", "node": "Human Approval", "duration_ms": 0.64, "success": true, "previous_node": "Draft Summary", "next_node": "Enrich"}
+{"timestamp": "2026-09-28 14:41:09", "level": "info", "message": "Node started", "event": "node_start", "node": "Enrich"}
+{"timestamp": "2026-09-28 14:41:09", "level": "info", "message": "Node completed", "event": "node_end", "node": "Enrich", "duration_ms": 1.1, "success": true, "previous_node": "Human Approval", "next_node": "Draft Summary"}
+{"timestamp": "2026-09-28 14:41:09", "level": "info", "message": "Node started", "event": "node_start", "node": "Draft Summary"}
+{"timestamp": "2026-09-28 14:41:12", "level": "info", "message": "Node completed", "event": "node_end", "node": "Draft Summary", "duration_ms": 2735.15, "success": true, "previous_node": "Enrich", "next_node": "Human Approval"}
+{"timestamp": "2026-09-28 14:41:12", "level": "info", "message": "Node started", "event": "node_start", "node": "Human Approval"}
+{"timestamp": "2026-09-28 14:41:12", "level": "error", "message": "Node failed", "event": "node_error", "node": "Human Approval", "duration_ms": 0.46, "success": false, "error_type": "GraphInterrupt", "error_message": "(Interrupt(value={'message': 'Do you want to approve the idea, reject the idea, or request improvements?', 'options': ['approve', 'reject', 'improve']}, id='fa707f742de09ae76dc23f42b9459504', response_schema=None),)"}
+{"timestamp": "2026-09-28 14:41:14", "level": "info", "message": "Node started", "event": "node_start", "node": "Human Approval"}
+{"timestamp": "2026-09-28 14:41:14", "level": "info", "message": "Human decision recorded", "event": "human_decision", "node": "Human Approval", "decision": "approve", "decision_time_ms": 0.04, "next_node": "Finalize"}
+{"timestamp": "2026-09-28 14:41:14", "level": "info", "message": "Node completed", "event": "node_end", "node": "Human Approval", "duration_ms": 0.49, "success": true, "previous_node": "Draft Summary", "next_node": "Finalize"}
