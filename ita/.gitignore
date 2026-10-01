@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 .env
 logs
+ita_checkpoints.sql

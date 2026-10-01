@@ -1,5 +1,4 @@
 from langgraph.types import interrupt
-
 from graph.state import AgentGraph
 
 from utils.node_utils import (
@@ -12,12 +11,9 @@ from utils.node_utils import (
 from logger.logging import logger
 
 
-def human_approval_node(
-    state: AgentGraph,
-) -> dict:
+def human_approval_node(state: AgentGraph,) -> dict:
 
     node_name = "Human Approval"
-
     started_at = utc_now()
     timer = start_timer()
 
@@ -95,9 +91,7 @@ def human_approval_node(
             },
 
             "reviewer_feedback": comment,
-
             "current_node": node_name,
-
             "status": "HUMAN_DECISION",
         }
 
@@ -139,10 +133,7 @@ def human_approval_node(
                 "extra_fields": {
                     "event": "node_end",
                     "node": node_name,
-                    "duration_ms": round(
-                        elapsed,
-                        2,
-                    ),
+                    "duration_ms": round( elapsed, 2, ),
                     "success": True,
                     "previous_node": previous_node,
                     "next_node": next_node,
@@ -165,10 +156,7 @@ def human_approval_node(
                 "extra_fields": {
                     "event": "node_error",
                     "node": node_name,
-                    "duration_ms": round(
-                        elapsed,
-                        2,
-                    ),
+                    "duration_ms": round( elapsed, 2, ),
                     "success": False,
                     "error_type": type(exc).__name__,
                     "error_message": str(exc),

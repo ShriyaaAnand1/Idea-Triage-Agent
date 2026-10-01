@@ -43,6 +43,7 @@ class NodeHistoryEntry(TypedDict):
     next_node: Optional[str]
 
 class AgentGraph(TypedDict, total=False):
+    user_id:str
     run_id: str
     thread_id: str
     correlation_id: str

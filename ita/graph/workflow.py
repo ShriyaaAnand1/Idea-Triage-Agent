@@ -1,6 +1,5 @@
 from langgraph.graph import StateGraph, START, END
-from langgraph.checkpoint.memory import InMemorySaver
-
+from database.connection import get_checkpointer
 from graph.state import AgentGraph
 
 from graph.nodes.submission import submission_node
@@ -83,9 +82,7 @@ builder.add_edge( "Enrich","Draft Summary")
 
 builder.add_edge( "Finalize", END)
 
-checkpointer = InMemorySaver()
-
-
-graph = builder.compile(
-    checkpointer=checkpointer
-)
+def create_graph(checkpointer):
+    return builder.compile(
+        checkpointer=checkpointer
+    )
