@@ -1,299 +1,283 @@
-from langgraph.types import Command
+import uuid
 
+from langgraph.types import Command
 from database.connection import get_checkpointer
-from database.users import create_user, get_thread_id
+from database.threads import (
+    create_thread,
+    get_active_thread,
+    mark_thread_completed,
+)
 from graph.workflow import create_graph
 from utils.thread_utils import create_thread_id
 
-def get_reviewer_decision():
+# ID helpers
+
+def create_run_id() -> str:
+    return str(uuid.uuid4())
+def create_correlation_id() -> str:
+    return str(uuid.uuid4())
+
+# Workflow completion
+
+def is_workflow_complete(state) -> bool:
+    return not state.next
+
+# Check for actual LangGraph interrupt
+
+def has_pending_interrupt(state) -> bool:
     """
-    Get the reviewer's decision from the user.
+    Return True only when a task contains
+    an actual LangGraph interrupt.
     """
-    print("\n========== HUMAN APPROVAL ==========")
-    print("\nReviewer decision:")
+    for task in state.tasks:
+
+        if task.interrupts:
+            return True
+
+    return False
+
+# Human approval
+
+def get_reviewer_decision(allow_improve=True):
+
+    print("\nHUMAN APPROVAL")
+
     print("1. Approve")
     print("2. Reject")
-    print("3. Need Improvement")
 
-    decision = input("\nEnter your choice: ").strip()
-    decision_map = {
-        "1": "approve",
-        "2": "reject",
-        "3": "improve",
-    }
-    action = decision_map.get(decision)
+    if allow_improve:
+        print("3. Need Improvement")
 
-    if action is None:
-        print("\nInvalid choice.")
-        return None
+    while True:
 
-    comment = ""
-    if action == "improve":
-        comment = input(
-            "\nEnter improvement suggestions:\n"
+        choice = input(
+            "\nEnter your choice: "
         ).strip()
 
-        if not comment:
-            print(
-                "\nImprovement suggestion cannot be empty."
-            )
-            return None
+        if choice == "1":
 
-    return {
-        "action": action,
-        "comment": comment,
+            return {
+                "action": "approve",
+                "comment": ""
+            }
+
+        elif choice == "2":
+
+            comment = input(
+                "Enter rejection comment: "
+            ).strip()
+
+            return {
+                "action": "reject",
+                "comment": comment
+            }
+
+        elif choice == "3" and allow_improve:
+
+            comment = input(
+                "Enter improvement comment: "
+            ).strip()
+
+            if not comment:
+                print("Comment cannot be empty.")
+                continue
+
+            return {
+                "action": "improve",
+                "comment": comment
+            }
+
+        else:
+
+            print("Invalid choice. Please try again.")
+
+
+# Start new workflow
+
+def start_new_workflow(user_name: str):
+
+    thread_id = create_thread_id()
+
+    create_thread(
+        user_name=user_name,
+        thread_id=thread_id
+    )
+
+    run_id = create_run_id()
+    correlation_id = create_correlation_id()
+
+    submission = input(
+        "\nEnter your idea submission: "
+    ).strip()
+
+    initial_state = {
+        "thread_id": thread_id,
+        "run_id": run_id,
+        "correlation_id": correlation_id,
+        "submission": submission,
     }
 
-def continue_workflow(graph, config, result):
-    """
-    Continue the workflow when LangGraph has reached
-    the Human Approval interrupt.
-    """
+    with get_checkpointer() as checkpointer:
 
-    while "__interrupt__" in result:
-        decision = get_reviewer_decision()
-        if decision is None:
-            return
-        print("\n========== CONTINUING WORKFLOW ==========")
-        result = graph.invoke(
-            Command(
-                resume=decision
-            ),
+        checkpointer.setup()
+
+        graph = create_graph(checkpointer)
+
+        config = {
+            "configurable": {
+                "thread_id": thread_id
+            }
+        }
+
+        graph.invoke(
+            initial_state,
             config
         )
 
-    # Workflow finished normally
-    state = graph.get_state(config)
-
-    print("\n========== WORKFLOW COMPLETED ==========")
-    print(
-        "Status:",
-        state.values.get("status")
-    )
-    print(
-        "Current node:",
-        state.values.get("current_node")
-    )
-
-def main():
-
-    print("\n========== IDEA TRIAGE AGENT ==========")
-    print("1. New User")
-    print("2. Existing User")
-
-    choice = input("\nEnter your choice: ").strip()
-
-    # NEW USER
-    if choice == "1":
-        user_name = input("\nEnter your name: ").strip()
-        if not user_name:
-            print("\nUser name cannot be empty.")
-            return
-        existing_thread_id = get_thread_id(user_name)
-        if existing_thread_id:
-            print("\nUser already exists.")
-            print(
-                "Please select 'Existing User' "
-                "to continue."
-            )
-            return
-
-        thread_id = create_thread_id()
-
-        create_user(
-            user_name=user_name,
+        handle_workflow(
+            graph=graph,
+            config=config,
             thread_id=thread_id
         )
 
-        print("\nUser created successfully.")
-        idea = input("\nEnter your idea:\n").strip()
+# Resume existing workflow
 
-        if not idea:
-            print("\nIdea cannot be empty.")
-            return
+def resume_existing_workflow(
+    user_name: str,
+    thread_id: str
+):
 
-        initial_state = {
-            "thread_id": thread_id,
-            "submission": idea,
-        }
+    print("\nRECOVERING WORKFLOW")
+
+    with get_checkpointer() as checkpointer:
+
+        checkpointer.setup()
+
+        graph = create_graph(checkpointer)
 
         config = {
             "configurable": {
                 "thread_id": thread_id
             }
         }
-        # Start workflow
-        with get_checkpointer() as checkpointer:
-            checkpointer.setup()
-            graph = create_graph(checkpointer)
-            print(
-                "\n========== STARTING WORKFLOW =========="
-            )
-            result = graph.invoke(
-                initial_state,
+
+        saved_state = graph.get_state(config)
+
+        print(
+            f"Current node: "
+            f"{saved_state.values.get('current_node')}"
+        )
+
+        print(
+            f"Status: "
+            f"{saved_state.values.get('status')}"
+        )
+        # Already completed
+        if is_workflow_complete(saved_state):
+
+            mark_thread_completed(thread_id)
+
+            print("Workflow already completed.")
+
+            return
+
+        # Actual LangGraph interrupt
+        if has_pending_interrupt(saved_state):
+
+            reviewer_decision = get_reviewer_decision()
+
+            graph.invoke(
+                Command(
+                    resume=reviewer_decision
+                ),
                 config
             )
-         # If Human Approval is reached, ask reviewer.
-            if "__interrupt__" in result:
-                continue_workflow(
-                    graph,
-                    config,
-                    result
-                )
-            else:
-                state = graph.get_state(config)
-                print(
-                    "\n========== WORKFLOW COMPLETED =========="
-                )
-                print(
-                    "Status:",
-                    state.values.get("status")
-                )
-                print(
-                    "Current node:",
-                    state.values.get("current_node")
-                )
-    
-    # EXISTING USER
-    elif choice == "2":
-        user_name = input("\nEnter your name: ").strip()
-        if not user_name:
-            print("\nUser name cannot be empty.")
-            return
-        # Retrieve thread
-        thread_id = get_thread_id(user_name)
-        if not thread_id:
-            print("\nUser not found.")
-            print(
-                "Please select 'New User'."
-            )
-            return
-        print("\nUser found.")
-        print(
-            "Thread ID:",
-            thread_id
-        )
-        config = {
-            "configurable": {
-                "thread_id": thread_id
-            }
-        }
-        # Open checkpointer
-        with get_checkpointer() as checkpointer:
-            checkpointer.setup()
-            graph = create_graph(checkpointer)
-                # Read latest checkpoint
 
-            state = graph.get_state(config)
-            if not state.values:
-                print(
-                    "\nNo existing workflow found "
-                    "for this user."
-                )
-                return
+        # No interrupt
+        else:
+
             print(
-                "\n========== RECOVERING WORKFLOW =========="
+                "Resuming from saved checkpoint..."
             )
-            print(
-                "Current node:",
-                state.values.get("current_node")
+
+            graph.invoke(
+                None,
+                config
             )
-            print(
-                "Status:",
-                state.values.get("status")
+
+        handle_workflow(
+            graph=graph,
+            config=config,
+            thread_id=thread_id
+        )
+
+# Continue workflow
+
+def handle_workflow(
+    graph,
+    config,
+    thread_id
+):
+
+    while True:
+
+        state = graph.get_state(config)
+        # Completed
+        if is_workflow_complete(state):
+
+            print("\nWORKFLOW COMPLETED")
+
+            mark_thread_completed(thread_id)
+
+            return
+        # Actual interrupt
+        if has_pending_interrupt(state):
+
+            reviewer_decision = get_reviewer_decision()
+
+            graph.invoke(
+                Command(
+                    resume=reviewer_decision
+                ),
+                config
             )
-    
-            # Workflow was stopped while waiting for Human Approval.
-            if state.tasks and any(
-                task.interrupts
-                for task in state.tasks
-            ):
-                print(
-                    "\nWorkflow was waiting for "
-                    "human approval when the process stopped."
-                )
-                decision = get_reviewer_decision()
-                if decision is None:
-                    return
-                print(
-                    "\n========== RESUMING WORKFLOW =========="
-                )
-                result = graph.invoke(
-                    Command(
-                        resume=decision
-                    ),
-                    config
-                )
-                # There may be another approval after an improvement.
-                if "__interrupt__" in result:
-                    continue_workflow(
-                        graph,
-                        config,
-                        result
-                    )
-                else:
-                    final_state = graph.get_state(config)
-                    print(
-                        "\n========== WORKFLOW COMPLETED =========="
-                    )
-                    print(
-                        "Status:",
-                        final_state.values.get("status")
-                    )
-                    print(
-                        "Current node:",
-                        final_state.values.get("current_node")
-                    )
-                return
-            
-            # Process stopped while workflow was executing Resume from the latest SQL checkpoint.
-            if state.next:
-                print(
-                    "\nThe previous process stopped "
-                    "before the workflow completed."
-                )
-                print(
-                    "Resuming from the saved checkpoint..."
-                )
-                result = graph.invoke(
-                    None,
-                    config
-                )
-                if "__interrupt__" in result:
-                    continue_workflow(
-                        graph,
-                        config,
-                        result
-                    )
-                else:
-                    final_state = graph.get_state(config)
-                    print(
-                        "\n========== WORKFLOW COMPLETED =========="
-                    )
-                    print(
-                        "Status:",
-                        final_state.values.get("status")
-                    )
-                    print(
-                        "Current node:",
-                        final_state.values.get("current_node")
-                    )
-                return
-           
-            # Workflow already completed.
-            print(
-                "\n========== WORKFLOW ALREADY COMPLETED =========="
-            )
-            print(
-                "Status:",
-                state.values.get("status")
-           )
-            print(
-                "Current node:",
-                state.values.get("current_node")
-            )
+
+            continue
+
+        # Normal continuation
+
+        graph.invoke(
+            None,
+            config
+        )
+
+# Main
+
+def main():
+    print("\nIDEA TRIAGE AGENT")
+
+    user_name = input(
+        "\nEnter your user name: "
+    ).strip()
+
+    if not user_name:
+
+        print("User name cannot be empty.")
+
+        return
+
+    # Look only for an unfinished workflow
+    active_thread = get_active_thread(user_name)
+
+    if active_thread:
+
+        resume_existing_workflow(
+            user_name=user_name,
+            thread_id=active_thread
+        )
+
     else:
-        print("\nInvalid choice.")
+        start_new_workflow(user_name)
 
 if __name__ == "__main__":
     main()

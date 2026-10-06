@@ -18,7 +18,7 @@ def route_after_classification(
     )
 
     if idea_score < QUALITY_THRESHOLD:
-        return "reject"
+        return "low_score"
 
     return "pass"
 
