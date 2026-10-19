@@ -4,3 +4,9 @@
 {"timestamp": "2026-10-19 15:43:46", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 5951.91, "success": true, "idea_score": 0.83, "previous_node": "Submission", "next_node": "Duplicate Check"}
 {"timestamp": "2026-10-19 15:43:46", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
 {"timestamp": "2026-10-19 15:43:48", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 2635.63, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
+{"timestamp": "2026-10-19 15:50:52", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
+{"timestamp": "2026-10-19 15:50:52", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.19, "success": true, "previous_node": "Submission", "next_node": "Classify"}
+{"timestamp": "2026-10-19 15:50:52", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
+{"timestamp": "2026-10-19 15:50:56", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 4684.11, "success": true, "idea_score": 0.82, "previous_node": "Submission", "next_node": "Duplicate Check"}
+{"timestamp": "2026-10-19 15:50:56", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
+{"timestamp": "2026-10-19 15:50:59", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 2101.14, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}

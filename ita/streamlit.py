@@ -131,9 +131,12 @@ def idea_reference(item):
 
 
 def idea_label(item):
+    """Show a friendly label without exposing internal IDs."""
     task_id = get_task_id(item)
-    reference = task_id or item.get("thread_id") or "Unknown"
-    return f"{reference} | {status_label(item)}"
+
+    if task_id:
+        return f"Task: {task_id} | {status_label(item)}"
+    return f"Draft not submitted | {status_label(item)}"
 
 
 def get_interrupt_type(idea):
@@ -228,6 +231,63 @@ def approval_is_required(idea):
     )
 
 
+def render_classification(classification):
+    """Display the idea category in a readable format."""
+    st.markdown("**Classification**")
+
+    if isinstance(classification, dict):
+        category = classification.get("category")
+
+        if category:
+            st.write(f"**Category:** {category}")
+        else:
+            st.write("Classification is available, but no category was returned.")
+    elif isinstance(classification, str):
+        st.write(f"**Category:** {classification}")
+    else:
+        st.write("Classification is not available.")
+
+
+def render_idea_assessment(assessment):
+    """Display the idea score, individual scores, and explanation."""
+    st.markdown("**Idea assessment**")
+
+    if not isinstance(assessment, dict):
+        st.write("Assessment is not available.")
+        return
+
+    idea_score = assessment.get("idea_score")
+
+    if idea_score is not None:
+        st.metric("Overall quality score", f"{float(idea_score):.0%}")
+
+    scores = assessment.get("scores") or {}
+
+    score_labels = {
+        "clarity": "Clarity",
+        "impact": "Impact",
+        "feasibility": "Feasibility",
+        "specificity": "Specificity",
+    }
+
+    if isinstance(scores, dict) and scores:
+        st.markdown("**Evaluation criteria**")
+
+        for key, label in score_labels.items():
+            value = scores.get(key)
+
+            if value is not None:
+                score = float(value)
+                st.write(f"**{label}:** {score:.0%}")
+                st.progress(max(0.0, min(1.0, score)))
+
+    reason = assessment.get("reason")
+
+    if reason:
+        st.markdown("**Assessment explanation**")
+        st.write(reason)
+
+
 # LOAD / REFRESH AN IDEA
 
 def load_one_idea(user_id, reference):
@@ -286,10 +346,6 @@ def render_user_idea(user_id):
             "your first draft summary."
         )
 
-    if thread_id:
-        st.caption("Workflow thread ID")
-        st.code(str(thread_id))
-
     status = str(idea.get("status") or "UNKNOWN").upper()
 
     submission = (
@@ -303,12 +359,10 @@ def render_user_idea(user_id):
             st.write(submission)
 
     if idea.get("classification") is not None:
-        st.markdown("**Classification**")
-        st.write(idea["classification"])
+        render_classification(idea["classification"])
 
     if idea.get("idea_assessment") is not None:
-        st.markdown("**Idea assessment**")
-        st.write(idea["idea_assessment"])
+        render_idea_assessment(idea["idea_assessment"])
 
     if (
         idea.get("duplicate_found") is True
@@ -524,6 +578,72 @@ def render_user_idea(user_id):
 
 # REVIEWER QUEUE
 
+def render_classification(classification):
+    st.markdown("**Classification**")
+
+    if isinstance(classification, dict):
+        category = classification.get("category")
+        if category:
+            st.write(f"**Category:** {category}")
+        else:
+            st.write("Classification details are unavailable.")
+    elif isinstance(classification, str):
+        st.write(f"**Category:** {classification}")
+    else:
+        st.write("Classification details are unavailable.")
+
+
+def render_idea_assessment(assessment):
+    st.markdown("**Idea Assessment**")
+
+    if not isinstance(assessment, dict):
+        st.write("Assessment details are unavailable.")
+        return
+
+    idea_score = assessment.get("idea_score")
+
+    if idea_score is not None:
+        try:
+            score = float(idea_score)
+            # Handle scores represented as either 0-1 or 0-100.
+            if score > 1:
+                score /= 100
+
+            st.metric("Overall Quality Score", f"{score:.0%}")
+        except (ValueError, TypeError):
+            st.write(f"**Overall Quality Score:** {idea_score}")
+
+    scores = assessment.get("scores") or {}
+
+    labels = {
+        "clarity": "Clarity",
+        "impact": "Impact",
+        "feasibility": "Feasibility",
+        "specificity": "Specificity",
+    }
+
+    if isinstance(scores, dict) and scores:
+        st.markdown("**Evaluation Criteria**")
+
+        for key, label in labels.items():
+            value = scores.get(key)
+
+            if value is not None:
+                try:
+                    score = float(value)
+                    if score > 1:
+                        score /= 100
+
+                    st.write(f"**{label}:** {score:.0%}")
+                    st.progress(max(0.0, min(1.0, score)))
+                except (ValueError, TypeError):
+                    st.write(f"**{label}:** {value}")
+
+    reason = assessment.get("reason")
+    if reason:
+        st.markdown("**Assessment Explanation**")
+        st.write(reason)
+
 def render_reviewer_queue(
     reviewer_id,
     queue_name,
@@ -565,10 +685,6 @@ def render_reviewer_queue(
     st.caption("Task ID")
     st.code(selected_task_id)
 
-    if selected.get("thread_id"):
-        st.caption("Workflow thread ID")
-        st.code(str(selected["thread_id"]))
-
     st.caption(f"Status: {status_label(selected)}")
 
     if selected.get("requested_at"):
@@ -581,13 +697,14 @@ def render_reviewer_queue(
         st.markdown("**Submitted idea**")
         st.write(selected["submission"])
 
-    if selected.get("classification") is not None:
-        st.markdown("**Classification**")
-        st.write(selected["classification"])
+    classification = selected.get("classification")
+    if classification is not None:
+      render_classification(classification)
 
-    if selected.get("idea_assessment") is not None:
-        st.markdown("**Idea assessment**")
-        st.write(selected["idea_assessment"])
+# Idea quality assessment
+    assessment = selected.get("idea_assessment")
+    if assessment is not None:
+      render_idea_assessment(assessment)
 
     if selected.get("draft_summary"):
         st.markdown("**Draft summary**")
@@ -770,11 +887,7 @@ if role == "User":
                     [
                         {
                             "task_id": get_task_id(item),
-                            "thread_id": item.get("thread_id"),
                             "status": item.get("status"),
-                            "current_node": item.get("current_node"),
-                            "started_at": item.get("started_at"),
-                            "completed_at": item.get("completed_at"),
                         }
                         for item in ideas
                     ],
