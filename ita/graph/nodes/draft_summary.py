@@ -1,126 +1,76 @@
+
+from datetime import datetime, timezone
+from langgraph.types import interrupt
+from uuid import uuid4
+
 from graph.state import AgentGraph
 
-from utils.node_utils import (
-    utc_now,
-    start_timer,
-    duration_ms,
-    add_node_history,
-)
 
-from logger.logging import logger
+def draft_summary_node(state: AgentGraph) -> dict:
+    """
+    Pause for the user's draft summary.
 
+    The first task_id is generated when the user submits the first draft.
+    On subsequent revisions, a new task_id is generated for each review cycle.
+    The thread_id remains unchanged for the entire idea workflow.
+    """
 
-def draft_summary_node(
-    state: AgentGraph,
-) -> dict:
+    thread_id = str(state.get("thread_id") or "").strip()
+    user_id = str(state.get("user_id") or "").strip()
+    current_task_id = str(state.get("task_id") or "").strip()
 
-    node_name = "Draft Summary"
+    if not thread_id:
+        raise ValueError("Draft Summary requires thread_id in graph state.")
 
-    started_at = utc_now()
-    timer = start_timer()
+    if not user_id:
+        raise ValueError("Draft Summary requires user_id in graph state.")
 
-    previous_node = state.get("current_node")
-
-    node_input = {
-        "submission_received": bool(
-            state.get("submission")
-        )
-    }
-
-    logger.info(
-        "Node started",
-        extra={
-            "extra_fields": {
-                "event": "node_start",
-                "node": node_name,
-            }
+    # Pause and request the user's draft.
+    submitted_summary = interrupt(
+        {
+            "type": "draft_summary_required",
+            "task_id": current_task_id or None,
+            "thread_id": thread_id,
+            "user_id": user_id,
+            "message": "Please submit or revise the draft summary.",
         }
     )
 
-    try:
+    if not isinstance(submitted_summary, str):
+        raise ValueError("The submitted draft summary must be text.")
 
-        print(
-            "\n========== DRAFT SUMMARY =========="
-        )
+    submitted_summary = submitted_summary.strip()
 
-        print(
-            "\nEnter the summary of the idea:"
-        )
+    if not submitted_summary:
+        raise ValueError("The submitted draft summary cannot be empty.")
 
-        draft = input("> ").strip()
+    # Create a task ID for this review cycle.
+    # First draft: T1. Revised draft: T2, T3, etc.
+    # The API should pass the newly generated ID through graph state
+    # before resuming this interrupt.
+    task_id = current_task_id or str(uuid4())
 
-        if not draft:
-            raise ValueError(
-                "Draft summary cannot be empty"
-            )
+    now = datetime.now(timezone.utc).isoformat()
 
-        print(
-            "\nDraft summary received."
-        )
+    draft_versions = list(state.get("draft_versions") or [])
+    revision_count = int(state.get("revision_count") or 0) + 1
 
-        print(
-            "===================================\n"
-        )
-
-        node_output = {
-            "draft_summary": draft,
-            "current_node": node_name,
-            "status": "DRAFT_CREATED",
+    draft_versions.append(
+        {
+            "version": revision_count,
+            "content": submitted_summary,
+            "created_at": now,
+            "task_id": task_id,
         }
+    )
 
-        next_node = "Human Approval"
-
-        finished_at = utc_now()
-        elapsed = duration_ms(timer)
-
-        history = add_node_history(
-            state=state,
-            node_name=node_name,
-            node_input=node_input,
-            node_output=node_output,
-            started_at=started_at,
-            finished_at=finished_at,
-            duration=elapsed,
-            success=True,
-            previous_node=previous_node,
-            next_node=next_node,
-        )
-
-        logger.info(
-            "Node completed",
-            extra={
-                "extra_fields": {
-                    "event": "node_end",
-                    "node": node_name,
-                    "duration_ms": round(elapsed, 2),
-                    "success": True,
-                    "previous_node": previous_node,
-                    "next_node": next_node,
-                }
-            }
-        )
-
-        return {
-            **node_output,
-            "node_history": history,
-        }
-
-    except Exception as exc:
-
-        elapsed = duration_ms(timer)
-
-        logger.error(
-            "Node failed",
-            extra={
-                "extra_fields": {
-                    "event": "node_error",
-                    "node": node_name,
-                    "duration_ms": round(elapsed, 2),
-                    "success": False,
-                    "error_type": type(exc).__name__,
-                    "error_message": str(exc),
-                }
-            }
-        )
-
-        raise
+    return {
+        "user_id": user_id,
+        "task_id": task_id,
+        "thread_id": thread_id,
+        "draft_summary": submitted_summary,
+        "draft_versions": draft_versions,
+        "revision_count": revision_count,
+        "current_node": "Draft Summary",
+        "status": "DRAFT_CREATED",
+    }

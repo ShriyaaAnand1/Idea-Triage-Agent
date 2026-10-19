@@ -25,8 +25,6 @@ class DraftVersion(TypedDict):
 
 class NodeHistoryEntry(TypedDict):
     node: str
-    run_id: str
-    correlation_id: str
 
     input: Dict[str, Any]
     output: Dict[str, Any]
@@ -43,10 +41,10 @@ class NodeHistoryEntry(TypedDict):
     next_node: Optional[str]
 
 class AgentGraph(TypedDict, total=False):
+    
     user_id:str
-    run_id: str
     thread_id: str
-    correlation_id: str
+    task_id:str
 
     current_node: str
     status: str

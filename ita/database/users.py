@@ -1,59 +1,72 @@
-import pyodbc
 
-from database.connection import DB_URI
+from database.connection import db_connection
 
 
-def create_user(user_name: str, thread_id: str):
+VALID_ROLES = {"USER", "REVIEWER"}
+
+
+def get_permitted_users(role=None):
     """
-    Store a new user and their thread ID.
+    Return active permitted users.
+    If role is supplied, filter by USER or REVIEWER.
+    """
+    if role is not None:
+        role = role.upper()
+
+        if role not in VALID_ROLES:
+            raise ValueError(f"Invalid role: {role}")
+
+    query = """
+        SELECT user_id, role, is_active, created_at
+        FROM dbo.PermittedUsers
+        WHERE is_active = 1
     """
 
-    conn = pyodbc.connect(DB_URI)
+    params = ()
 
-    try:
+    if role is not None:
+        query += " AND role = ?"
+        params = (role,)
+
+    query += " ORDER BY user_id"
+
+    with db_connection() as conn:
         cursor = conn.cursor()
+        cursor.execute(query, params)
 
-        cursor.execute(
-            """
-            INSERT INTO Users (user_name, thread_id)
-            VALUES (?, ?)
-            """,
-            user_name,
-            thread_id
-        )
-
-        conn.commit()
-
-    finally:
-        conn.close()
+        return [
+            {
+                "user_id": row[0],
+                "role": row[1],
+                "is_active": bool(row[2]),
+                "created_at": row[3],
+            }
+            for row in cursor.fetchall()
+        ]
 
 
-def get_thread_id(user_name: str):
+def validate_permitted_user(user_id, role=None):
+    """Check whether a user exists, is active, and has the required role."""
+    if role is not None:
+        role = role.upper()
+
+        if role not in VALID_ROLES:
+            raise ValueError(f"Invalid role: {role}")
+
+    query = """
+        SELECT 1
+        FROM dbo.PermittedUsers
+        WHERE user_id = ?
+          AND is_active = 1
     """
-    Retrieve the thread ID associated with a user.
-    Returns None if the user does not exist.
-    """
 
-    conn = pyodbc.connect(DB_URI)
+    params = [user_id]
 
-    try:
+    if role is not None:
+        query += " AND role = ?"
+        params.append(role)
+
+    with db_connection() as conn:
         cursor = conn.cursor()
-
-        cursor.execute(
-            """
-            SELECT thread_id
-            FROM Users
-            WHERE user_name = ?
-            """,
-            user_name
-        )
-
-        row = cursor.fetchone()
-
-        if row:
-            return row[0]
-
-        return None
-
-    finally:
-        conn.close()
+        cursor.execute(query, *params)
+        return cursor.fetchone() is not None

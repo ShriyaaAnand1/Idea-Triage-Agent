@@ -1,167 +1,99 @@
+
 from langgraph.types import interrupt
+
 from graph.state import AgentGraph
-
-from utils.node_utils import (
-    utc_now,
-    start_timer,
-    duration_ms,
-    add_node_history,
-)
-
-from logger.logging import logger
+from database.approvals import create_approval
+from database.connection import db_connection
 
 
-def human_approval_node(state: AgentGraph,) -> dict:
+VALID_ACTIONS = {"approve", "reject", "improve"}
 
-    node_name = "Human Approval"
-    started_at = utc_now()
-    timer = start_timer()
 
-    previous_node = state.get("current_node")
+def get_active_task_id(thread_id: str) -> str:
+    """Find the latest draft submitted for this workflow."""
+    with db_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """
+                SELECT TOP 1 task_id
+                FROM dbo.Runs
+                WHERE thread_id = ?
+                ORDER BY started_at DESC, task_id DESC
+                """,
+                (thread_id,),
+            )
+            row = cursor.fetchone()
 
-    node_input = {
-        "draft_available": bool(
-            state.get("draft_summary")
+            if row is None or row[0] is None:
+                raise ValueError(
+                    f"No submitted draft exists for thread_id={thread_id}"
+                )
+
+            return str(row[0])
+        finally:
+            cursor.close()
+
+
+def human_approval_node(state: AgentGraph) -> dict:
+    thread_id = str(state.get("thread_id") or "").strip()
+
+    if not thread_id:
+        raise ValueError(
+            "Human Approval requires thread_id in graph state."
         )
-    }
 
-    logger.info(
-        "Node started",
-        extra={
-            "extra_fields": {
-                "event": "node_start",
-                "node": node_name,
-            }
+    # The database, not the checkpoint, identifies the active draft.
+    task_id = get_active_task_id(thread_id)
+
+    create_approval(
+        thread_id=thread_id,
+        task_id=task_id,
+    )
+
+    decision = interrupt(
+        {
+            "type": "approval_required",
+            "thread_id": thread_id,
+            "message": (
+                "A reviewer decision is required for this draft summary."
+            ),
+            "options": ["approve", "reject", "improve"],
         }
     )
 
-    try:
-
-        # Start measuring human decision time
-        decision_timer = start_timer()
-
-        decision = interrupt(
-            {
-                "message": (
-                    "Do you want to approve the idea, "
-                    "reject the idea, or request improvements?"
-                ),
-                "options": [
-                    "approve",
-                    "reject",
-                    "improve",
-                ],
-            }
+    if not isinstance(decision, dict):
+        raise ValueError(
+            "Expected a dictionary containing action and comment."
         )
 
-        decision_time = duration_ms(
-            decision_timer
+    action = str(decision.get("action") or "").strip().lower()
+    comment = str(decision.get("comment") or "").strip()
+
+    if action not in VALID_ACTIONS:
+        raise ValueError(
+            "Reviewer action must be approve, reject, or improve."
         )
 
-        action = decision.get("action")
-
-        comment = decision.get(
-            "comment",
-            "",
+    if action == "improve" and not comment:
+        raise ValueError(
+            "A comment is required when choosing improve."
         )
 
-        if action not in {
-            "approve",
-            "reject",
-            "improve",
-        }:
+    decision_history = list(state.get("decision_history") or [])
+    decision_history.append({
+        "task_id": task_id,
+        "thread_id": thread_id,
+        "action": action.upper(),
+        "comment": comment or None,
+    })
 
-            raise ValueError(
-                f"Invalid human decision: {action}"
-            )
-
-        if action == "approve":
-            next_node = "Finalize"
-
-        elif action == "reject":
-            next_node = "END"
-
-        else:
-            next_node = "Enrich"
-
-        node_output = {
-            "current_decision": {
-                "action": action,
-                "comment": comment,
-            },
-
-            "reviewer_feedback": comment,
-            "current_node": node_name,
-            "status": "HUMAN_DECISION",
-        }
-
-        finished_at = utc_now()
-        elapsed = duration_ms(timer)
-
-        history = add_node_history(
-            state=state,
-            node_name=node_name,
-            node_input=node_input,
-            node_output=node_output,
-            started_at=started_at,
-            finished_at=finished_at,
-            duration=elapsed,
-            success=True,
-            previous_node=previous_node,
-            next_node=next_node,
-        )
-
-        logger.info(
-            "Human decision recorded",
-            extra={
-                "extra_fields": {
-                    "event": "human_decision",
-                    "node": node_name,
-                    "decision": action,
-                    "decision_time_ms": round(
-                        decision_time,
-                        2,
-                    ),
-                    "next_node": next_node,
-                }
-            }
-        )
-
-        logger.info(
-            "Node completed",
-            extra={
-                "extra_fields": {
-                    "event": "node_end",
-                    "node": node_name,
-                    "duration_ms": round( elapsed, 2, ),
-                    "success": True,
-                    "previous_node": previous_node,
-                    "next_node": next_node,
-                }
-            }
-        )
-
-        return {
-            **node_output,
-            "node_history": history,
-        }
-
-    except Exception as exc:
-
-        elapsed = duration_ms(timer)
-
-        logger.error(
-            "Node failed",
-            extra={
-                "extra_fields": {
-                    "event": "node_error",
-                    "node": node_name,
-                    "duration_ms": round( elapsed, 2, ),
-                    "success": False,
-                    "error_type": type(exc).__name__,
-                    "error_message": str(exc),
-                }
-            }
-        )
-
-        raise
+    return {
+        "thread_id": thread_id,
+        "current_node": "Human Approval",
+        "current_decision": action,
+        "reviewer_decision": action.upper(),
+        "reviewer_feedback": comment or None,
+        "decision_history": decision_history,
+        "status": "HUMAN_DECISION",
+    }

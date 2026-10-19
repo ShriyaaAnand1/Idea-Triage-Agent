@@ -72,7 +72,7 @@ builder.add_conditional_edges(
     route_after_approval,
     {
         "reject": END,
-        "improve": "Enrich",
+        "improve": "Draft Summary",
         "approve": "Finalize",
     }
 )
