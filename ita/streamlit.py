@@ -10,7 +10,6 @@ st.set_page_config(
 st.title("Idea Triage Agent")
 st.caption("Submit ideas, track progress, and review approvals.")
 
-
 # SESSION STATE
 
 DEFAULTS = {

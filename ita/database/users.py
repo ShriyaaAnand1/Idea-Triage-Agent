@@ -1,6 +1,7 @@
 
 from database.connection import db_connection
-
+from fastapi import HTTPException
+from database.queries import fetch_one
 
 VALID_ROLES = {"USER", "REVIEWER"}
 
@@ -70,3 +71,21 @@ def validate_permitted_user(user_id, role=None):
         cursor = conn.cursor()
         cursor.execute(query, *params)
         return cursor.fetchone() is not None
+    
+def validate_user(user_id: str, expected_role: str) -> None:
+    row = fetch_one(
+        """
+        SELECT user_id
+        FROM dbo.PermittedUsers
+        WHERE user_id = ?
+          AND role = ?
+          AND is_active = 1
+        """,
+        (user_id.strip(), expected_role.upper()),
+    )
+
+    if row is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Invalid or inactive {expected_role.lower()} ID.",
+        )

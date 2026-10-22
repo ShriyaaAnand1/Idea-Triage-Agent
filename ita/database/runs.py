@@ -1,18 +1,8 @@
-
 import uuid
+from typing import Optional
 
 from database.connection import db_connection
-
-
-def _uuid_text(value, field_name):
-    """Validate and normalize a UUID for SQL Server."""
-    try:
-        return str(uuid.UUID(str(value)))
-    except (ValueError, TypeError, AttributeError) as exc:
-        raise ValueError(
-            f"{field_name} must be a valid UUID: {value}"
-        ) from exc
-
+from database.queries import fetch_one, execute_sql
 
 def create_run(
     thread_id,
@@ -120,3 +110,84 @@ def get_runs_by_user(user_id):
             }
             for row in cursor.fetchall()
         ]
+    
+
+#main
+def get_latest_run_for_thread(
+    thread_id: str,
+    user_id: str,
+) -> Optional[dict]:
+    """
+    Return the latest submitted draft for an idea.
+
+    task_id identifies a draft cycle.
+    thread_id identifies the entire idea workflow.
+    """
+    return fetch_one(
+        """
+        SELECT TOP 1
+            task_id,
+            thread_id,
+            user_id,
+            status,
+            current_node,
+            started_at,
+            completed_at
+        FROM dbo.Runs
+        WHERE thread_id = ?
+          AND user_id = ?
+        ORDER BY started_at DESC, task_id DESC
+        """,
+        (thread_id, user_id),
+    )
+
+
+def get_latest_run_for_thread_any_user(
+    thread_id: str,
+) -> Optional[dict]:
+    return fetch_one(
+        """
+        SELECT TOP 1
+            task_id,
+            thread_id,
+            user_id,
+            status,
+            current_node,
+            started_at,
+            completed_at
+        FROM dbo.Runs
+        WHERE thread_id = ?
+        ORDER BY started_at DESC, task_id DESC
+        """,
+        (thread_id,),
+    )
+
+
+def insert_run(
+    task_id: str,
+    thread_id: str,
+    user_id: str,
+) -> None:
+    """
+    Insert one Run for one draft submission.
+
+    This ID is stored in SQL, not required in checkpoint state.
+    """
+    execute_sql(
+        """
+        INSERT INTO dbo.Runs
+            (
+                task_id,
+                thread_id,
+                status,
+                current_node,
+                started_at,
+                completed_at,
+                user_id
+            )
+        VALUES
+            (?, ?, 'SUBMITTED', 'Draft Summary',
+             SYSUTCDATETIME(), NULL, ?)
+        """,
+        (task_id, thread_id, user_id),
+    )
