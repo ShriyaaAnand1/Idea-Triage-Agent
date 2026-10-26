@@ -1,46 +1,15 @@
-{"timestamp": "2026-10-22 14:48:09", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:48:15", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:48:25", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:48:32", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:48:32", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
-{"timestamp": "2026-10-22 14:48:32", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 0.92, "success": true, "previous_node": "Submission", "next_node": "Classify"}
-{"timestamp": "2026-10-22 14:48:32", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
-{"timestamp": "2026-10-22 14:48:37", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 4803.15, "success": true, "idea_score": 0.87, "previous_node": "Submission", "next_node": "Duplicate Check"}
-{"timestamp": "2026-10-22 14:48:37", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
-{"timestamp": "2026-10-22 14:48:39", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 2484.2, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
-{"timestamp": "2026-10-22 14:53:23", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:56:13", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:56:20", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:56:44", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:56:52", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:57:03", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:57:29", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:58:07", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:58:10", "level": "error", "message": "Draft submission failed: thread_id=2d878216-04ef-4b36-9045-7e073bf7e64f task_id=None"}
-{"timestamp": "2026-10-22 14:59:27", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:59:32", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 14:59:38", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:05:05", "level": "error", "message": "Draft submission failed: thread_id=2d878216-04ef-4b36-9045-7e073bf7e64f task_id=None"}
-{"timestamp": "2026-10-22 15:48:47", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:49:16", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:50:20", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:50:32", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:50:56", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:51:10", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 15:51:48", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
-{"timestamp": "2026-10-22 15:51:48", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.01, "success": true, "previous_node": "Submission", "next_node": "Classify"}
-{"timestamp": "2026-10-22 15:51:48", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
-{"timestamp": "2026-10-22 15:51:49", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
-{"timestamp": "2026-10-22 15:51:49", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 3.17, "success": true, "previous_node": "Submission", "next_node": "Classify"}
-{"timestamp": "2026-10-22 15:51:49", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
-{"timestamp": "2026-10-22 15:51:53", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 4523.65, "success": true, "idea_score": 0.88, "previous_node": "Submission", "next_node": "Duplicate Check"}
-{"timestamp": "2026-10-22 15:51:53", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
-{"timestamp": "2026-10-22 15:51:53", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 5139.46, "success": true, "idea_score": 0.88, "previous_node": "Submission", "next_node": "Duplicate Check"}
-{"timestamp": "2026-10-22 15:51:53", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
-{"timestamp": "2026-10-22 15:51:55", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 1883.59, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
-{"timestamp": "2026-10-22 15:51:55", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 1864.29, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
-{"timestamp": "2026-10-22 15:52:10", "level": "error", "message": "Draft submission failed: thread_id=bb734ffa-6b07-4549-b62c-2c55b887ce52 task_id=None error_type=NameError error=name 'fetch_one' is not defined"}
-{"timestamp": "2026-10-22 15:57:34", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 16:01:32", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 16:05:11", "level": "info", "message": "Approval escalation loop started"}
-{"timestamp": "2026-10-22 16:05:28", "level": "info", "message": "Approval escalation loop started"}
+{"timestamp": "2026-10-26 14:50:14", "level": "info", "message": "Approval escalation loop started"}
+{"timestamp": "2026-10-26 14:52:03", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
+{"timestamp": "2026-10-26 14:52:03", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.37, "success": true, "previous_node": "Submission", "next_node": "Classify"}
+{"timestamp": "2026-10-26 14:52:03", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
+{"timestamp": "2026-10-26 14:52:10", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 6215.43, "success": true, "idea_score": 0.87, "previous_node": "Submission", "next_node": "Duplicate Check"}
+{"timestamp": "2026-10-26 14:52:10", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
+{"timestamp": "2026-10-26 14:52:12", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 2068.45, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
+{"timestamp": "2026-10-26 14:53:47", "level": "info", "message": "Node started", "event": "node_start", "node": "Submission"}
+{"timestamp": "2026-10-26 14:53:47", "level": "info", "message": "Node completed", "event": "node_end", "node": "Submission", "duration_ms": 1.69, "success": true, "previous_node": "Submission", "next_node": "Classify"}
+{"timestamp": "2026-10-26 14:53:47", "level": "info", "message": "Node started", "event": "node_start", "node": "Classify"}
+{"timestamp": "2026-10-26 14:53:51", "level": "info", "message": "Node completed", "event": "node_end", "node": "Classify", "duration": 4419.06, "success": true, "idea_score": 0.86, "previous_node": "Submission", "next_node": "Duplicate Check"}
+{"timestamp": "2026-10-26 14:53:51", "level": "info", "message": "Node started", "event": "node_start", "node": "Duplicate Check"}
+{"timestamp": "2026-10-26 14:53:53", "level": "info", "message": "Node completed", "event": "node_end", "node": "Duplicate Check", "duration_ms": 1471.51, "success": true, "previous_node": "Classify", "next_node": "Draft Summary", "duplicate_found": false}
+{"timestamp": "2026-10-26 14:58:18", "level": "info", "message": "Approval escalation loop started"}
+{"timestamp": "2026-10-26 14:58:36", "level": "info", "message": "Approval escalation loop started"}

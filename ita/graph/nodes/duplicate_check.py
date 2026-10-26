@@ -18,9 +18,6 @@ SIMILARITY_THRESHOLD = 0.80
 TOP_K = 3
 
 
-vectorstore = load_vectorstore()
-
-
 def duplicate_check_node(
     state: AgentGraph,
 ) -> dict:
@@ -47,6 +44,7 @@ def duplicate_check_node(
             }
         }
     )
+    vectorstore = load_vectorstore()
 
     try:
 
