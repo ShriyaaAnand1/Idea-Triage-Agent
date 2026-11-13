@@ -7,5 +7,6 @@ share/
 __pycache__/
 *.pyc
 .env
-logs
+logs/
+*.log
 ita_checkpoints.sql
