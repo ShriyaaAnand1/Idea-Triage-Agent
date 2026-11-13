@@ -1,0 +1,12 @@
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+share/
+
+__pycache__/
+*.pyc
+.env
+logs/
+*.log
+ita_checkpoints.sql

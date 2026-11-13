@@ -1,0 +1,14 @@
+python-dotenv
+openai
+langgraph
+langchain-core
+chromadb
+langchain_openai
+langchain_community
+faiss-cpu
+langgraph-checkpoint-mssql
+pyodbc
+fastapi 
+uvicorn[standard]
+PyJWT 
+argon2-cffi
